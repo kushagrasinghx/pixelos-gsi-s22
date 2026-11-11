@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- R0qBattery: Samsung-style battery protection for the Galaxy S22 GSI.
+     Injected into Settings > Battery (IA_SETTINGS tile, system apps only). The choice is stored in
+     persist.sys.r0q.batt_protect (system_prop, settable by system_app); r0q-battery.rc applies it as root at boot and
+     on change, writing the same values One UI's BatteryService writes. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="me.kushagra.r0q.battery"
+    android:sharedUserId="android.uid.system"
+    android:versionCode="1" android:versionName="1.0">
+    <!-- Also hosts Dolby Atmos (DolbyController/DolbyActivity/DolbyTile): persistent so the Dolby effect stays attached. -->
+    <application android:name=".R0qApp" android:persistent="true"
+        android:label="Battery protection" android:allowBackup="false">
+        <activity android:name=".ProtectionActivity"
+            android:exported="true"
+            android:label="Battery protection"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:noHistory="true">
+            <intent-filter>
+                <action android:name="com.android.settings.action.IA_SETTINGS" />
+            </intent-filter>
+            <meta-data android:name="com.android.settings.category" android:value="com.android.settings.category.ia.battery" />
+            <meta-data android:name="com.android.settings.summary" android:value="Limit charging to extend battery lifespan" />
+            <meta-data android:name="com.android.settings.icon" android:resource="@drawable/ic_battery_protect" />
+            <meta-data android:name="com.android.settings.icon_tintable" android:value="true" />
+        </activity>
+        <!-- Dolby Atmos picker: Settings > Sound entry and the QS tile's long-press target. -->
+        <activity android:name=".DolbyActivity"
+            android:exported="true"
+            android:label="Dolby Atmos"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:noHistory="true">
+            <intent-filter>
+                <action android:name="com.android.settings.action.IA_SETTINGS" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+            </intent-filter>
+            <meta-data android:name="com.android.settings.category" android:value="com.android.settings.category.ia.sound" />
+            <meta-data android:name="com.android.settings.summary" android:value="Samsung Dolby Atmos sound (Auto, Movie, Music, Voice)" />
+            <meta-data android:name="com.android.settings.icon" android:resource="@drawable/ic_dolby" />
+            <meta-data android:name="com.android.settings.icon_tintable" android:value="true" />
+        </activity>
+        <service android:name=".DolbyTile"
+            android:exported="true"
+            android:label="Dolby Atmos"
+            android:icon="@drawable/ic_dolby"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE" android:value="true" />
+        </service>
+        <!-- Boot (also before first unlock): refresh-rate switching type NONE (120 Hz lock without tint flicker) and
+             Turbo's adaptive-brightness receivers disabled so the stock One UI curve is used (BootReceiver.smali) -->
+        <receiver android:name=".BootReceiver" android:exported="true" android:directBootAware="true">
+            <intent-filter>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

@@ -1,0 +1,34 @@
+From ffa16395a04724a86639eaa98d63627324778aae Mon Sep 17 00:00:00 2001
+From: Kushagra Singh <kushagrasinghx@gmail.com>
+Date: Tue, 10 Nov 2026 09:06:27 +0000
+Subject: [PATCH] soong_ui: Forward GOGC and GOMEMLIMIT to soong_build
+
+soong_build runs under env -i, so Go GC settings exported in the shell
+never reach it. Forward them so low-RAM machines can cap the analysis
+heap instead of swapping for hours.
+
+---
+ ui/build/soong.go | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/ui/build/soong.go b/ui/build/soong.go
+index c9b303c..c194f6c 100644
+--- a/ui/build/soong.go
++++ b/ui/build/soong.go
+@@ -241,6 +241,13 @@ func (pb PrimaryBuilderFactory) primaryBuilderInvocation(config Config) bootstra
+ 		// https://github.com/golang/proposal/blob/master/design/24543-non-cooperative-preemption.md
+ 		invocationEnv["GODEBUG"] = "asyncpreemptoff=1"
+ 	}
++	// soong_build runs under `env -i`, so forward Go GC tuning explicitly. This lets low-RAM
++	// machines cap the analysis heap (e.g. GOMEMLIMIT=9GiB GOGC=50) instead of swapping.
++	for _, k := range []string{"GOGC", "GOMEMLIMIT"} {
++		if v := os.Getenv(k); v != "" {
++			invocationEnv[k] = v
++		}
++	}
+ 
+ 	var allArgs []string
+ 	allArgs = append(allArgs, pb.specificArgs...)
+-- 
+2.53.0
+

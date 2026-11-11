@@ -1,0 +1,31 @@
+# r0q (Galaxy S22 Snapdragon) UI smoothness on a GSI. Measured 2026-11-10 with atrace on the app drawer:
+# SurfaceFlinger's blur work ran on the A510 little cores at ~1 GHz and the GPU woke at 285 MHz,
+# so blurred UI (app drawer, shade, recents) composed at 60 fps. With these settings it holds 120 fps.
+#  - top-app scheduler floor 50% + latency_sensitive: keeps SurfaceFlinger's frame threads (joined to top-app by
+#    SFMainPolicy/SFRenderEnginePolicy in task_profiles.json) and the foreground app on the big cores.
+#    25% was not enough (RenderEngine stayed on little cores); 40% left big cores at ~1.65 GHz on some runs, 50% keeps ~2.0 GHz.
+#  - GPU wake-up level 6 (492 MHz) instead of 10 (285 MHz): 90% vs 84% of drawer frames at 120 Hz.
+#    Level 4 (599 MHz) measured worse.
+#  - GPU clock floor level 6 (492 MHz, min_pwrlevel; stock floor 124.8 MHz). Blur makes SurfaceFlinger composite every
+#    frame on the GPU in short bursts; the governor sat at 285-492 MHz (16% avg busy) and those composites overran.
+#    SF timestats, shade+drawer loop with blur on (2026-11-11): missed frames 144 -> 110 with the early-GL SF offset
+#    (product build.prop) alone, -> 36-49 with this floor added (blur off: 30). The floor alone was not enough (76-138).
+#    Idle GPU still power-collapses; the floor only applies while it is running.
+# Applied after boot and again after Qualcomm's post-boot tuning, which runs late and may rewrite these.
+
+on property:sys.boot_completed=1
+    # Under-display fingerprint: put the touchscreen (STM) in FOD mode around the sensor so a finger on the circle is
+    # reported to the fingerprint HAL ("FOD PRESS"). One UI's framework (SemUdfpsTspManager) does this; AOSP doesn't.
+    # Rect = sensor centre 540,1750 +/- radius 110 (config_udfps_sensor_props). init can already write sysfs_sec.
+    write /sys/class/sec/tsp/cmd "set_fod_rect,430,1640,650,1860"
+    write /sys/class/sec/tsp/cmd "fod_enable,1,1,0"
+    write /dev/cpuctl/top-app/cpu.uclamp.min 50
+    write /dev/cpuctl/top-app/cpu.uclamp.latency_sensitive 1
+    write /sys/class/kgsl/kgsl-3d0/default_pwrlevel 6
+    write /sys/class/kgsl/kgsl-3d0/min_pwrlevel 6
+
+on property:vendor.post_boot.parsed=1
+    write /dev/cpuctl/top-app/cpu.uclamp.min 50
+    write /dev/cpuctl/top-app/cpu.uclamp.latency_sensitive 1
+    write /sys/class/kgsl/kgsl-3d0/default_pwrlevel 6
+    write /sys/class/kgsl/kgsl-3d0/min_pwrlevel 6

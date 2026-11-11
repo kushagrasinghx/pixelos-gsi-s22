@@ -1,0 +1,60 @@
+# Doze-off patches (patches-16.2) NOT applied for the r0q build.
+# Policy: keep generic GSI/kernel-compat patches + Samsung + Qualcomm; drop fixes
+# that only target other manufacturers' phones. One path per line, relative to patches/.
+
+# --- Motorola
+trebledroid/platform_external_selinux/0005-if-service-is-rcs-accept-conflict.-Seen-on-Moto-E5.patch
+trebledroid/platform_external_selinux/0007-Fix-boot-on-Moto-devices-using-unknown-class.patch
+trebledroid/platform_external_selinux/0012-Fix-secilc-on-Moto-One-Action.patch
+trebledroid/platform_frameworks_base/0032-Detect-Moto-dynamic-hardware-feature.patch
+trebledroid/platform_system_core/0016-Add-vendor-firmware_mnt.-Moto-Razr-2019-look-for-fir.patch
+
+# --- MediaTek
+trebledroid/platform_frameworks_base/0031-Add-Mediatek-power-hints-on-touch.patch
+trebledroid/platform_frameworks_native/0009-Add-MTK-GED-KPI-support-to-fix-broken-Mediatek-gpufr.patch
+trebledroid/platform_frameworks_opt_net_ims/0001-Pie-MTK-IMS-calls-static-ImsManager.updateImsService.patch
+trebledroid/platform_frameworks_opt_telephony/0004-Reintroduce-public-void-TelephonyMetrics.writeRilSen.patch
+personal/platform_frameworks_base/0013-deviceidle-auto-disable-AnyMotionDetector-on-MTK.patch
+personal/platform_frameworks_native/0002-Add-MTK-GED-KPI-support-to-fix-broken-Mediatek-gpufr.patch
+personal/platform_frameworks_native/0003-Add-MTK-GED-KPI-support-to-fix-broken-Mediatek-gpufr2.patch
+personal/platform_frameworks_opt_telephony/0001-Reintroduce-TelephonyMetrics-stub-for-MediaTek-IMS.patch
+
+# --- Huawei
+trebledroid/platform_frameworks_opt_telephony/0002-Telephony-Don-not-call-onUssdRelease-for-Huawei-RIL.patch
+trebledroid/platform_system_netd/0001-Huawei-Kirin-960-accept-broken-rpfilter-match.patch
+
+# --- Xiaomi / MIUI
+trebledroid/platform_frameworks_native/0006-MIUI13-devices-hide-their-vibrator-HAL-behind-non-de.patch
+trebledroid/platform_hardware_interfaces/0002-Fix-light-sensor-crash-on-Xiaomi-13.patch
+
+# --- OPPO / OnePlus (Oplus)
+personal/platform_frameworks_base/0025-biometrics_oplus_notify_fingerprint_sensor_pressed_1.patch
+personal/platform_frameworks_native/0010-Oplus-OPPO-Udfps-Fix.patch
+
+# --- Asus
+trebledroid/platform_frameworks_av/0003-Add-partial-cam-id-is-hardcoded-support-for-Asus-ZF6.patch
+
+# --- Meizu
+trebledroid/platform_frameworks_native/0014-Fix-touch-on-Meizu-21-Note.patch
+trebledroid/platform_frameworks_native/0015-Fix-touch-on-MEIZU-21-Pro-1.patch
+
+# --- Nubia
+trebledroid/platform_system_core/0020-fix-Nubia-6-series-custom-rc-action-prop-validation.patch
+
+# --- Transsion (Tecno/Infinix/itel)
+personal/platform_frameworks_base/0034-SystemUI-biometrics-Add-HBM-Trigger-for-Transsion-UD.patch
+
+# --- FIH (Nokia/Sharp)
+trebledroid/platform_frameworks_av/0011-FIH-devices-Fix-Earpiece-audio-output.patch
+
+# --- Unihertz / Agold
+trebledroid/platform_frameworks_av/0024-Tell-Unihertz-Agold-we-are-not-a-GSI.-Fixes-aux-cam-.patch
+
+# --- Google Pixel 5 (R base kernel 4.19 BPF)
+trebledroid/platform_packages_modules_Connectivity/0004-Revert-drop-support-for-V-gsi-on-pixel-5-R-base-kern.patch
+
+# Kept on purpose although other brands are named:
+#  trebledroid/platform_frameworks_base/0037 FOD support for Asus, Samsung, Xiaomi, RedMagic (needed for Samsung FOD)
+#  trebledroid/platform_frameworks_native/0008 FOD support for Samsung and Asus (Samsung FOD)
+#  trebledroid/platform_hardware_interfaces/0001 vendor800 HWC command (used by the Samsung FOD patch)
+#  personal/platform_vendor_interfaces/0001 revert lge vibrator (removes LG code, does not add it)

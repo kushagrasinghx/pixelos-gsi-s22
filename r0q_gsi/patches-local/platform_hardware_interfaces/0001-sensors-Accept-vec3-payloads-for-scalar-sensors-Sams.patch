@@ -1,0 +1,36 @@
+From fb9e35dde1b28aceb0d0cfbf8c55f2856d52fdb6 Mon Sep 17 00:00:00 2001
+From: Kushagra Singh <kushagrasinghx@gmail.com>
+Date: Mon, 9 Nov 2026 12:52:13 +0000
+Subject: [PATCH] sensors: Accept vec3 payloads for scalar sensors (Samsung)
+
+Samsung stock sensor HALs can report a vec3 payload for scalar sensor
+types, which aborts in convertToSensorEvent. Same fix as TrebleDroid
+"Fix crash on Samsung S23 using stock properties", rebased without the
+Xiaomi pose6DOF patch it was written on top of.
+
+Change-Id: Ibf1a1ce07a7700ac08bfb5116ad5f428eebbc7ee
+---
+ sensors/aidl/convert/convert.cpp | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/sensors/aidl/convert/convert.cpp b/sensors/aidl/convert/convert.cpp
+index 940699c..f419a6c 100644
+--- a/sensors/aidl/convert/convert.cpp
++++ b/sensors/aidl/convert/convert.cpp
+@@ -162,7 +162,12 @@ void convertToSensorEvent(const Event& src, sensors_event_t* dst) {
+         case SensorType::MOTION_DETECT:
+         case SensorType::HEART_BEAT:
+         case SensorType::LOW_LATENCY_OFFBODY_DETECT: {
+-            dst->data[0] = src.payload.get<Event::EventPayload::scalar>();
++            if (src.payload.getTag() == Event::EventPayload::vec3) {
++                // Samsung stock sensors can report vec3 here; reading it as scalar aborts.
++                dst->data[0] = src.payload.get<Event::EventPayload::vec3>().x;
++            } else {
++                dst->data[0] = src.payload.get<Event::EventPayload::scalar>();
++            }
+             break;
+         }
+ 
+-- 
+2.53.0
+

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- R0qSystemUIOverlay (target com.android.systemui).
+     pixel_pitch: physical pixel size in micrometres. AOSP default is -1 ("must be updated per device"); SystemUI sizes the
+     under-display fingerprint / lock icon as udfps_icon_size (6000 um) / pixel_pitch, so -1 gives a negative icon size and
+     the lockscreen icon renders as an empty dark disc (or a stray white sliver of a huge fingerprint).
+     Galaxy S22: 6.1" 1080x2340 = ~423 ppi -> 25400 / 423 = 60 um. Icon = 100 px inside the 220 px sensor circle. -->
+<resources>
+    <item name="pixel_pitch" format="float" type="dimen">60.0</item>
+    <!-- Status bar icons lower, like One UI: the bar stays 84 px (status_bar_height 4.8 mm), but the content gets a top
+         padding, so clock and icons centre on the punch hole (hole ~56 px wide, ends at y=81, centre ~y=53) instead of
+         sitting above it (AOSP centres in the full bar: y=42). This dimen moves the lockscreen bar; the regular bar is
+         padded by phh code from persist.sys.phh.status_bar_padding_top = 24 px (product build.prop). -->
+    <dimen name="status_bar_padding_top">8dp</dimen>
+    <!-- Smaller network type (5G / LTE) next to the signal bars, like One UI: 12sp -> 10sp. Android 16's new status bar
+         icons size the type view from status_bar_mobile_type_size_updated (the "_updated" vectors are ~12dp tall);
+         the legacy status_bar_mobile_type_size (16sp) is set too for the old layout path. Signal bars are unchanged. -->
+    <dimen name="status_bar_mobile_type_size_updated">10sp</dimen>
+    <dimen name="status_bar_mobile_type_size">10sp</dimen>
+    <!-- Status bar clock 14sp (AOSP 15.8dp; 10sp was too small). -->
+    <dimen name="status_bar_clock_size">14sp</dimen>
+</resources>

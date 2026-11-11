@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings.Global.DEVICE_PROVISIONED = 1 on first boot -->
+    <bool name="def_device_provisioned">true</bool>
+    <!-- Settings.Secure.USER_SETUP_COMPLETE = 1 on first boot -->
+    <bool name="def_user_setup_complete">true</bool>
+</resources>

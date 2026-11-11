@@ -1,0 +1,18 @@
+# r0q USB audio (USB DACs, USB-C headsets). Verified live 2026-11-11 with a FiiO JadeAudio JA11.
+# Samsung's /vendor/etc/audio_policy_configuration.xml declares no USB device at all, so Android never routed to a DAC.
+# The AOSP "usb" module (audio.usb.default: CPU -> snd-usb-audio) does NOT work on this SoC: the stream starts but the
+# hardware pointer never moves (any rate/format). Like stock, USB must go through Samsung's primary HAL (Qualcomm PAL,
+# PAL_DEVICE_OUT_USB_HEADSET on the USB_AUDIO-RX backend = DSP offload via qc_usb_audio / snd_usb_audio_qmi).
+# keep/pixelos-scripts/audio/audio_policy_configuration.xml = the Samsung file + USB Device/Headset Out/In device ports
+# and routes in the primary module (no usb module include). Mounted over the vendor file before audioserver starts.
+# Re-diff it if the vendor changes.
+
+on post-fs
+    mount none /system/etc/r0q/audio_policy_configuration.xml /vendor/etc/audio_policy_configuration.xml bind
+
+# USB host (DACs, drives, keyboards): Samsung's usb_notify starts in secure_lock "init" (usb_sl = SKY_DEFAULT,
+# first_restrict = 1) and blocks every host device ("usb notify is blocked") until One UI's framework reports the lock
+# screen state. Nothing on the GSI does, so OTG never enumerated anything. SUNNY_WORK_MODE = secure_lock unlock: plain
+# AOSP behaviour (no Samsung "block new USB devices while locked"). Needs (allow init sysfs_usb (file (write open getattr))).
+on boot
+    write /sys/class/usb_notify/usb_control/usb_sl SUNNY_WORK_MODE

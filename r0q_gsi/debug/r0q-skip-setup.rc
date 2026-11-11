@@ -1,0 +1,4 @@
+# TEMPORARY (DSU testing): tell the setup wizard it is disabled before it runs.
+# Same mechanism device/phh/treble/vndk.rc uses for other read-only props.
+on post-fs-data
+    exec u:r:phhsu_daemon:s0 root -- /system/bin/resetprop_phh ro.setupwizard.mode DISABLED

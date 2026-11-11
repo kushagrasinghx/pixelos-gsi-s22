@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Device can do VoLTE / Wi-Fi calling through PhhIms. Per-carrier enablement
+         still comes from CarrierConfig. -->
+    <bool name="config_device_volte_available">true</bool>
+    <bool name="config_carrier_volte_available">true</bool>
+    <bool name="config_device_wfc_ims_available">true</bool>
+
+    <!-- PhhIms carries call audio as RTP in userspace (AudioRecord/AudioTrack). Samsung's
+         audio HAL routes the mic to the modem in MODE_IN_CALL, so IMS calls must use
+         MODE_IN_COMMUNICATION. -->
+    <bool name="config_use_voip_mode_for_ims">true</bool>
+</resources>

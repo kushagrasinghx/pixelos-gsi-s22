@@ -1,0 +1,31 @@
+# r0q battery protection (One UI 8 modes), chosen in Settings > Battery > Battery protection (R0qBattery app), which
+# stores persist.sys.r0q.batt_protect. Applied here as root, at boot (when persist props load) and on every change,
+# writing the same sysfs values One UI's BatteryService writes:
+#   off    -> batt_full_capacity 100,          batt_soc_rechg 0
+#   basic  -> batt_full_capacity 100,          batt_soc_rechg 1   (stop at 100%, resume below 95%)
+#   80..95 -> batt_full_capacity "<N> OPTION", batt_soc_rechg 0   (Maximum: the charger stops at N%)
+# The nodes are labelled sysfs_battery; the vendor policy already lets init write them (checked: no extra rule needed).
+
+on property:persist.sys.r0q.batt_protect=off
+    write /sys/class/power_supply/battery/batt_full_capacity 100
+    write /sys/class/power_supply/battery/batt_soc_rechg 0
+
+on property:persist.sys.r0q.batt_protect=basic
+    write /sys/class/power_supply/battery/batt_full_capacity 100
+    write /sys/class/power_supply/battery/batt_soc_rechg 1
+
+on property:persist.sys.r0q.batt_protect=80
+    write /sys/class/power_supply/battery/batt_full_capacity "80 OPTION"
+    write /sys/class/power_supply/battery/batt_soc_rechg 0
+
+on property:persist.sys.r0q.batt_protect=85
+    write /sys/class/power_supply/battery/batt_full_capacity "85 OPTION"
+    write /sys/class/power_supply/battery/batt_soc_rechg 0
+
+on property:persist.sys.r0q.batt_protect=90
+    write /sys/class/power_supply/battery/batt_full_capacity "90 OPTION"
+    write /sys/class/power_supply/battery/batt_soc_rechg 0
+
+on property:persist.sys.r0q.batt_protect=95
+    write /sys/class/power_supply/battery/batt_full_capacity "95 OPTION"
+    write /sys/class/power_supply/battery/batt_soc_rechg 0

@@ -1,0 +1,11 @@
+# Compiled probes and one-off device test scripts (adb sessions), not part of the build
+*.dex
+torch/test/*.sh
+__pycache__/
+*.pyc
+
+# Dropped experiment: Pixel Launcher no-blur overlay (did not take effect on the device)
+launcher_res/
+
+# Build logs from the source-build layer
+r0q_gsi/patches-apply.log

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- S22 r0q 5 GHz hotspot. Samsung's vendor hostapd only writes hw_mode=a for channel 149 (One UI's default);
+     for every other 5 GHz channel it writes hw_mode=g and fails with "Could not select hw_mode and channel".
+     Tested 2026-11-10: ch 36/40/44/48/153/161/165 fail, ch 149 starts (AP-ENABLED). So only offer channel 149. -->
+<resources>
+    <string name="config_wifiSoftap5gChannelList" translatable="false">149</string>
+</resources>

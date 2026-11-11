@@ -1,0 +1,29 @@
+// Galaxy S22 (r0q) IMS layer overlays. All are static RROs gated on
+// ro.product.vendor.device=r0q, so the GSI behaves stock on other devices.
+
+// Framework (android): VoLTE/WFC capability and VoIP audio mode for IMS calls.
+runtime_resource_overlay {
+    name: "R0qImsFrameworkOverlay",
+    manifest: "overlays/framework/AndroidManifest.xml",
+    resource_dirs: ["overlays/framework/res"],
+    certificate: "platform",
+    product_specific: true,
+}
+
+// CarrierConfig (com.android.carrierconfig): res/xml/vendor.xml per-carrier overrides.
+runtime_resource_overlay {
+    name: "R0qCarrierConfigOverlay",
+    manifest: "overlays/carrierconfig/AndroidManifest.xml",
+    resource_dirs: ["overlays/carrierconfig/res"],
+    certificate: "platform",
+    product_specific: true,
+}
+
+// PhhIms (me.phh.ims): carrier SIP policy exceptions.
+runtime_resource_overlay {
+    name: "R0qPhhImsPolicyOverlay",
+    manifest: "overlays/phhims/AndroidManifest.xml",
+    resource_dirs: ["overlays/phhims/res"],
+    certificate: "platform",
+    product_specific: true,
+}

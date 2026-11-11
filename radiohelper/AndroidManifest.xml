@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- R0qRadioHelper: sends Samsung's FW_READY to ISehRadio on both slots at boot.
+     Samsung's RIL keeps standard signal strength empty (INT_MAX -> 0 bars) until the framework sends it.
+     Runs as android.uid.phone so it gets the radio SELinux domain that may talk to the radio HALs. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="me.kushagra.r0q.radiohelper"
+    android:sharedUserId="android.uid.phone"
+    android:versionCode="1"
+    android:versionName="1.0">
+    <uses-sdk android:minSdkVersion="31" android:targetSdkVersion="36" />
+    <application android:label="R0q Radio Helper"
+        android:directBootAware="true"
+        android:allowBackup="false"
+        android:hasCode="true">
+        <receiver android:name="me.kushagra.r0q.radiohelper.BootReceiver"
+            android:exported="true"
+            android:directBootAware="true">
+            <intent-filter>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

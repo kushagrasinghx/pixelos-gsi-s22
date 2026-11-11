@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<!-- Galaxy S22 (r0q) + PhhIms carrier overrides, read after the per-carrier assets.
+     Carrier IDs are AOSP canonical IDs from TelephonyProvider carrier_list.textpb:
+       1961 = Airtel (India, incl. 40554)
+       2018 = Reliance Jio (405840, 405854-405874, incl. 405863)
+     The stock vendor.xml in packages/apps/CarrierConfig is empty, so this file replaces nothing. -->
+<carrier_config_list>
+    <!-- AOSP config for Airtel does not enable VoLTE. Samsung's stock IMS profile
+         (AIRTEL_IN) enables mmtel + smsip on LTE/NR/Wi-Fi. -->
+    <carrier_config cid="1961" name="Airtel">
+        <boolean name="carrier_volte_available_bool" value="true"/>
+        <boolean name="editable_enhanced_4g_lte_bool" value="true"/>
+        <boolean name="enhanced_4g_lte_on_by_default_bool" value="true"/>
+        <boolean name="carrier_wfc_ims_available_bool" value="true"/>
+    </carrier_config>
+
+    <!-- AOSP config for Jio already enables VoLTE; also expose Wi-Fi calling, which
+         Samsung's stock IMS profile (RJIL_IN) enables. -->
+    <carrier_config cid="2018" name="Reliance Jio">
+        <boolean name="carrier_wfc_ims_available_bool" value="true"/>
+    </carrier_config>
+</carrier_config_list>

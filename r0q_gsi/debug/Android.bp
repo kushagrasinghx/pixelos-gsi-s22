@@ -1,0 +1,8 @@
+// TEMPORARY (DSU testing): first boot lands on the launcher, without the setup wizard.
+runtime_resource_overlay {
+    name: "R0qSkipSetupOverlay",
+    manifest: "skip-setup-overlay/AndroidManifest.xml",
+    resource_dirs: ["skip-setup-overlay/res"],
+    certificate: "platform",
+    product_specific: true,
+}

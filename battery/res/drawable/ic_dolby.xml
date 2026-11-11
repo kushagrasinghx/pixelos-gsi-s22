@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dolby Atmos icon: One UI's own Quick Settings tile icon (SoundAlive raw/quick_panel_icon_dolby_atmos, Samsung SPR
+     vector format v0004, 138x138 viewport) decoded to path data, canvas cropped to the logo. Even-odd fill = the double-D cut out of the rounded box. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="84" android:viewportHeight="84">
+    <!-- logo spans x 34-104, y 40-98 in the 138 canvas: crop to an 84 square centred on it (~83% fill, like Material icons) -->
+    <group android:translateX="-27" android:translateY="-27">
+    <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+        android:pathData="M98.000,40.000 L40.000,40.000 C36.702,40.000 34.000,42.699 34.000,46.000 L34.000,92.000 C34.000,95.299 36.702,98.000 40.000,98.000 L98.000,98.000 C101.301,98.000 104.000,95.299 104.000,92.000 L104.000,46.000 C104.000,42.699 101.301,40.000 98.000,40.000 Z M64.630,69.654 C64.630,69.431 64.621,69.219 64.617,69.000 C64.331,83.419 54.768,87.000 49.452,87.000 C45.605,87.000 41.964,87.000 41.964,87.000 L41.964,51.000 C41.964,51.000 45.605,51.000 49.452,51.000 C54.768,51.000 64.331,54.580 64.617,69.000 C64.621,68.781 64.630,68.567 64.630,68.343 L64.630,69.654 Z M96.036,87.000 C96.036,87.000 92.395,87.000 88.549,87.000 C83.232,87.000 73.668,83.419 73.384,69.000 C73.379,69.219 73.370,69.431 73.370,69.654 L73.370,68.343 C73.370,68.567 73.379,68.781 73.384,69.000 C73.668,54.580 83.232,51.000 88.549,51.000 C92.395,51.000 96.036,51.000 96.036,51.000 L96.036,87.000 Z" />
+    </group>
+</vector>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Galaxy S22 (r0q), built-in panel on display port 130. Read by DisplayDeviceConfig from /product before vendor/config.xml.
+     Samsung HWC: panel level = brightness float x 510 (linear, measured). Levels 0..255 are the normal range (One UI's
+     manual maximum); 256..510 is the sunlight boost (HBM). Nits per level: phh treble-overlay-samsung-r0q approximation.
+     highBrightnessMode keeps the slider and indoor auto-brightness at level 255 and only lets auto-brightness go above it
+     in bright ambient light, like One UI. Everything not set here falls back to config.xml (curve, thresholds, ramps). -->
+<displayConfiguration>
+    <name>Samsung Galaxy S22 panel</name>
+    <screenBrightnessMap>
+            <point><value>0.000000</value><nits>2</nits></point>
+            <point><value>0.001961</value><nits>2.37</nits></point>
+            <point><value>0.003922</value><nits>2.912</nits></point>
+            <point><value>0.005882</value><nits>3.545</nits></point>
+            <point><value>0.007843</value><nits>4.246</nits></point>
+            <point><value>0.009804</value><nits>5.002</nits></point>
+            <point><value>0.011765</value><nits>5.805</nits></point>
+            <point><value>0.015686</value><nits>7.53</nits></point>
+            <point><value>0.019608</value><nits>9.391</nits></point>
+            <point><value>0.023529</value><nits>11.368</nits></point>
+            <point><value>0.027451</value><nits>13.447</nits></point>
+            <point><value>0.033333</value><nits>16.734</nits></point>
+            <point><value>0.039216</value><nits>20.2</nits></point>
+            <point><value>0.047059</value><nits>25.068</nits></point>
+            <point><value>0.054902</value><nits>30.186</nits></point>
+            <point><value>0.064706</value><nits>36.898</nits></point>
+            <point><value>0.078431</value><nits>46.813</nits></point>
+            <point><value>0.094118</value><nits>58.799</nits></point>
+            <point><value>0.109804</value><nits>71.402</nits></point>
+            <point><value>0.125490</value><nits>84.558</nits></point>
+            <point><value>0.149020</value><nits>105.225</nits></point>
+            <point><value>0.176471</value><nits>130.6</nits></point>
+            <point><value>0.203922</value><nits>157.192</nits></point>
+            <point><value>0.235294</value><nits>188.923</nits></point>
+            <point><value>0.274510</value><nits>230.399</nits></point>
+            <point><value>0.313725</value><nits>273.696</nits></point>
+            <point><value>0.362745</value><nits>330.133</nits></point>
+            <point><value>0.411765</value><nits>388.912</nits></point>
+            <point><value>0.454902</value><nits>442.414</nits></point>
+            <point><value>0.500000</value><nits>500</nits></point>
+            <point><value>0.568627</value><nits>568.627</nits></point>
+            <point><value>0.647059</value><nits>647.059</nits></point>
+            <point><value>0.725490</value><nits>725.49</nits></point>
+            <point><value>0.803922</value><nits>803.922</nits></point>
+            <point><value>0.901961</value><nits>901.961</nits></point>
+            <point><value>1.000000</value><nits>1000</nits></point>
+    </screenBrightnessMap>
+    <highBrightnessMode enabled="true">
+        <transitionPoint>0.5</transitionPoint>
+        <minimumLux>3000</minimumLux> <!-- sensor lux; curve passes level 255 only above 4000 (sunlight boost 383 at 10000, 510 at 20000) -->
+        <timing>
+            <!-- timeMaxSecs == timeWindowSecs: no time limit in direct sun (One UI has none either) -->
+            <timeWindowSecs>600</timeWindowSecs>
+            <timeMaxSecs>600</timeMaxSecs>
+            <timeMinSecs>10</timeMinSecs>
+        </timing>
+        <thermalStatusLimit>severe</thermalStatusLimit>
+        <allowInLowPowerMode>false</allowInLowPowerMode>
+    </highBrightnessMode>
+</displayConfiguration>

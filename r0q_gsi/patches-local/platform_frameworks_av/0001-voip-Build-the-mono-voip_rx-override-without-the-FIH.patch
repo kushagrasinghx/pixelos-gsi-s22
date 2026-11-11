@@ -1,0 +1,30 @@
+From de5d0c2634ef048b242edd72587616937390d109 Mon Sep 17 00:00:00 2001
+From: Kushagra Singh <kushagrasinghx@gmail.com>
+Date: Mon, 9 Nov 2026 12:51:43 +0000
+Subject: [PATCH] voip: Build the mono voip_rx override without the FIH
+ earpiece patch
+
+The TrebleDroid voip_rx fix assigns to channelsMask, a local that only
+exists when the FIH earpiece patch is applied. r0q skips that patch,
+so override the channel mask string instead. Same behaviour.
+
+---
+ .../audiopolicy/common/managerdefinitions/src/Serializer.cpp    | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/services/audiopolicy/common/managerdefinitions/src/Serializer.cpp b/services/audiopolicy/common/managerdefinitions/src/Serializer.cpp
+index 5f3cc4a..72a5022 100644
+--- a/services/audiopolicy/common/managerdefinitions/src/Serializer.cpp
++++ b/services/audiopolicy/common/managerdefinitions/src/Serializer.cpp
+@@ -432,7 +432,7 @@ PolicySerializer::deserialize<AudioProfileTraits>(
+     bool disableStereoVoip = property_get_bool("persist.sys.phh.disable_stereo_voip", false);
+     if (disableStereoVoip && mMixPortName == "voip_rx") {
+         ALOGI("%s: disabling stereo support on voip_rx", __func__);
+-        channelsMask = channelMasksFromString("AUDIO_CHANNEL_OUT_MONO", ",");
++        channels = "AUDIO_CHANNEL_OUT_MONO";
+     }
+ 
+     if (mIgnoreVendorExtensions && maybeVendorExtension(format)) {
+-- 
+2.53.0
+
