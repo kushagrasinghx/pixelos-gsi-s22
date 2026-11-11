@@ -13,6 +13,9 @@ if [ -d "$VALUES" ]; then cp -r "$VALUES"/. $W/res/; else cp "$VALUES" $W/res/va
 cat > $W/AndroidManifest.xml <<EOF
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="$PKG">
+    <!-- Required: without an <application> element Android 16's parser rejects this manifest ("<manifest> does not
+         contain an <application> or <instrumentation>"), so the overlay silently never loads from the image. -->
+    <application android:hasCode="false"/>
     <overlay android:targetPackage="$TARGET" android:isStatic="true" android:priority="$PRIO" />
 </manifest>
 EOF

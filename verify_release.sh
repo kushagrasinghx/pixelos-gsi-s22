@@ -17,6 +17,24 @@ noprop(){ grep -q "$2" "$S/$1" && bad "$1 has $2" || ok "$1 has no $2"; }
 nohas product/overlay/R0qLauncherOverlay.apk
 has product/overlay/R0qBrightnessOverlay.apk
 has product/overlay/R0qSystemUIOverlay.apk
+has product/overlay/R0qWifiOverlay.apk
+# Our overlays need an <application> element: on the phone, Android 16's parser rejected the aapt2-built R0q
+# overlays without one ("<manifest> does not contain an <application> or <instrumentation>"), so they silently never
+# loaded. The 2026-11-11 release shipped R0qBrightness/SystemUI/Wifi like that. (Some upstream overlays, e.g.
+# ParanoidSenseOverlay, lack the tag and still load, so only ours are checked.)
+H=/mnt/d/S22/ProjectInfinityX/keep/host-tools
+for a in "$S"/product/overlay/R0q*.apk; do
+  [ -e "$a" ] || continue
+  LD_LIBRARY_PATH=$H/lib64 $H/aapt2 dump xmltree --file AndroidManifest.xml "$a" 2>/dev/null | grep -qE '^ +E: (application|instrumentation) ' \
+    && ok "manifest has <application> ${a#$S/}" || bad "no <application> in manifest (Android skips it) ${a#$S/}"
+done
+# Pre-extracted native libs: every lib/arm64-v8a/*.so in the APK must be in <app>/lib/arm64/ (the 2026-11-11 release
+# put all but one into product/ instead, and Messages crashed on libgoogle3.so). No stray .so directly in product/.
+for app in product/app/PrebuiltBugle/PrebuiltBugle.apk product/app/Photos/Photos.apk; do
+  want=$(unzip -l "$S/$app" 'lib/arm64-v8a/*.so' 2>/dev/null | grep -c '\.so$'); got=$(ls "$S/$(dirname $app)"/lib/arm64/*.so 2>/dev/null | wc -l)
+  [ "$want" -gt 0 ] && [ "$want" = "$got" ] && ok "$app: $got/$want native libs extracted" || bad "$app: $got/$want native libs extracted"
+done
+stray=$(ls "$S"/product/*.so 2>/dev/null | wc -l); [ "$stray" = 0 ] && ok "no stray .so in product/" || bad "$stray stray .so files in product/"
 has product/etc/displayconfig/display_port_130.xml
 has app/R0qBattery/R0qBattery.apk
 has etc/init/r0q-battery.rc

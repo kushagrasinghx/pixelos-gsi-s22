@@ -67,7 +67,11 @@ variables at the top of each script for yours.
 ### Testing on the phone
 
 Use DSU Sideloader on the base ROM; it keeps your current ROM. To flash for daily use: Odin with a vbmeta that has
-verification disabled, then recovery → *Enter fastboot* → `fastboot flash system system.img` → wipe data.
+verification disabled, then recovery → *Enter fastboot* (TWRP: Advanced → Fastboot) → `fastboot flash system system.img`
+→ wipe data.
+
+Updating between releases keeps data: flash only `system` and don't wipe. This works because every release is signed
+with the same keys.
 
 ## Repository layout
 

@@ -71,6 +71,9 @@ setfattr() { # setfattr -n NAME -v VALUE PATH (the attr package isn't installed;
   python3 -c 'import os,sys; os.setxattr(sys.argv[3], sys.argv[1], sys.argv[2].encode()+b"\0")' "$2" "$4" "$5"
 }
 add() { # src dst mode
+  # d must be local: callers use $d too (the native-lib loop below), and a global d sent every lib after the first
+  # into /system/product/ in the 2026-11-11 release (Messages crashed on libgoogle3.so).
+  local d
   install -D -m $3 -o 0 -g 0 "$1" "$2"
   setfattr -n security.selinux -v $CTX "$2"
   d=$(dirname "$2"); while [ "$d" != "$S" ] && [ "$d" != "$S/product" ] && [ "$d" != "/" ]; do chown 0:0 "$d"; chmod 755 "$d"; setfattr -n security.selinux -v $CTX "$d"; d=$(dirname "$d"); done
@@ -273,7 +276,8 @@ for app in product/app/PrebuiltBugle/PrebuiltBugle.apk product/app/Photos/Photos
   d=$S/$(dirname $app)/lib/arm64; mkdir -p $d
   (cd $W && rm -rf libx && mkdir libx && unzip -q -o $S/$app 'lib/arm64-v8a/*.so' -d libx)
   for so in $W/libx/lib/arm64-v8a/*.so; do add "$so" "$d/$(basename $so)" 644; done
-  log "extracted $(ls $d | wc -l) arm64 libs for $app"
+  n=$(ls $W/libx/lib/arm64-v8a/*.so | wc -l); [ "$(ls $d/*.so | wc -l)" = "$n" ] || { log "lib extraction incomplete for $app"; exit 1; }
+  log "extracted $n arm64 libs for $app"
 done
 # Props: IMS toggles (VoLTE / VoWiFi availability; kept for release, calling depends on them).
 # RELEASE=0 adds the debug-only bring-up props: adb on by default and without authorization (logcat on DSU).
