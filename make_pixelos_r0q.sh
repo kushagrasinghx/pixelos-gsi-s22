@@ -309,6 +309,11 @@ cat >> $S/build.prop <<EOF
 # r0q release
 ro.r0q.version=$VERSION
 ro.r0q.ota.url=https://github.com/kushagrasinghx/pixelos-gsi-s22/releases/latest/download/ota.json
+# PixelOS's identity marker (device builds set it; Doze-off's GSI doesn't). Play Integrity Fork / AlwaysStrong look for
+# it to switch off PixelOS's own GMS spoof (persist.sys.pihooks.disable.*). Without it they only act while those props
+# already exist, and the props were gone after each system update (seen after v1.1 and v1.2), so the attestation
+# block came back and device integrity failed until the props were set again.
+net.pixelos.version=16.2
 EOF
 echo "$VERSION $BUILD_UTC" > $OUT/version.txt
 log "version $VERSION, build date $BUILD_DATE ($BUILD_UTC)"
