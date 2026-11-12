@@ -4,6 +4,8 @@
 # SHA-256 through the block map, and recovery may create/remove a logical partition in super (needed for resize).
 # Results go to the screen and /cache/r0q-ota-test.txt.
 PAY_OFF=@@PAY_OFF@@
+BB_OFF=@@BB_OFF@@
+BB_LEN=@@BB_LEN@@
 PAY_LEN=@@PAY_LEN@@
 IMG_SIZE=@@IMG_SIZE@@
 IMG_SHA=@@IMG_SHA@@
@@ -26,7 +28,7 @@ pkg_cat() {
         read -r N
         i=0
         while [ $i -lt $N ] && read -r S E; do
-          dd if="$BLK" bs=1M iflag=skip_bytes,count_bytes skip=$((S * BS)) count=$(((E - S) * BS)) 2>/dev/null || return 1
+          dd if="$BLK" bs=$BS skip=$S count=$((E - S)) 2>/dev/null || return 1
           i=$((i + 1))
         done
       } < "$MAP"
@@ -40,7 +42,9 @@ ui_print "r0q OTA dry run $VERSION"
 ui_print "package: $PKG"
 ui_print "device: $(getprop ro.product.device) / $(getprop ro.build.product)"
 case "$PKG" in @*) ui_print "block map: $(head -3 ${PKG#@} | tr '\n' ' ')";; esac
-SUM=$(payload | xzcat | sha256sum | cut -d' ' -f1)
+XZ=xzcat; command -v xzcat >/dev/null 2>&1 || { mkdir -p /tmp/r0q-bb; pkg_cat | tail -c +$((BB_OFF + 1)) | head -c $BB_LEN > /tmp/r0q-bb/busybox; chmod 755 /tmp/r0q-bb/busybox; XZ="/tmp/r0q-bb/busybox xzcat"; }
+ui_print "xz: $XZ"
+SUM=$(payload | $XZ | sha256sum | cut -d' ' -f1)
 [ "$SUM" = "$IMG_SHA" ] && ui_print "PAYLOAD OK (sha256 matches)" || ui_print "PAYLOAD BAD: $SUM"
 if lptools create r0q_ota_probe 1048576 > /tmp/probe.log 2>&1; then
   ui_print "SUPER WRITE OK (created probe partition)"

@@ -10,6 +10,8 @@
 #
 # make_ota.py fills in the values below (fixed-width, so the payload offset in the zip doesn't move).
 PAY_OFF=@@PAY_OFF@@
+BB_OFF=@@BB_OFF@@
+BB_LEN=@@BB_LEN@@
 PAY_LEN=@@PAY_LEN@@
 IMG_SIZE=@@IMG_SIZE@@
 IMG_SHA=@@IMG_SHA@@
@@ -42,7 +44,8 @@ pkg_cat() {
         read -r N
         i=0
         while [ $i -lt $N ] && read -r S E; do
-          dd if="$BLK" bs=1M iflag=skip_bytes,count_bytes skip=$((S * BS)) count=$(((E - S) * BS)) 2>/dev/null || return 1
+          # Block units: TWRP's toybox dd overflows on byte offsets past 2 GiB (skip_bytes into userdata failed).
+          dd if="$BLK" bs=$BS skip=$S count=$((E - S)) 2>/dev/null || return 1
           i=$((i + 1))
         done
       } < "$MAP"
@@ -52,9 +55,21 @@ pkg_cat() {
 }
 payload() { pkg_cat | tail -c +$((PAY_OFF + 1)) | head -c $PAY_LEN; }
 
+# xz decompressor: recovery's own xzcat if it has one (TWRP r0q 2024 doesn't, not even as a toybox applet), else the
+# static busybox shipped in the zip (phh's busybox_phh, 32-bit ARM, runs in TWRP). R0Q_XZ overrides (manual runs).
+XZ=${R0Q_XZ:-}
+if [ -z "$XZ" ] && command -v xzcat >/dev/null 2>&1; then XZ=xzcat; fi
+if [ -z "$XZ" ] && [ "$BB_LEN" -gt 0 ]; then
+  mkdir -p /tmp/r0q-bb
+  pkg_cat | tail -c +$((BB_OFF + 1)) | head -c $BB_LEN > /tmp/r0q-bb/busybox
+  chmod 755 /tmp/r0q-bb/busybox
+  /tmp/r0q-bb/busybox xzcat --help >/dev/null 2>&1 && XZ="/tmp/r0q-bb/busybox xzcat"
+fi
+
 ui_print "- Checking the package..."
 GOT=$(payload | head -c 6 | od -An -tx1 | tr -d ' \n')
 [ "$GOT" = "fd377a585a00" ] || abort "can't read the update payload (got '$GOT'); the download may be damaged"
+[ -n "$XZ" ] || abort "no xz decompressor in this recovery"
 
 ui_print "- Preparing the system partition..."
 umount /system_root 2>/dev/null; umount /system 2>/dev/null; umount /mnt/system 2>/dev/null
@@ -67,7 +82,7 @@ CUR=$(blockdev --getsize64 $SYS)
 [ "$CUR" -ge "$IMG_SIZE" ] || abort "system is $CUR bytes, need $IMG_SIZE"
 
 ui_print "- Writing system ($((IMG_SIZE / 1048576)) MB), this takes a few minutes..."
-payload | xzcat | dd of=$SYS bs=1M 2>/dev/null
+payload | $XZ | dd of=$SYS bs=1M 2>/dev/null
 ui_print "- Verifying..."
 SUM=$(head -c $IMG_SIZE $SYS | sha256sum | cut -d' ' -f1)
 if [ "$SUM" != "$IMG_SHA" ]; then

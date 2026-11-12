@@ -44,6 +44,7 @@ public final class Ota {
     static final int JOB_ID = 4201;
     public static final File DIR = new File("/data/ota_package");
     public static final File PKG = new File(DIR, "r0q-update.zip");
+    static final File META = new File(DIR, "r0q-update.sha256");
 
     public static final int IDLE = 0, CHECKING = 1, DOWNLOADING = 2, VERIFYING = 3, READY = 4, ERROR = 5;
 
@@ -254,14 +255,27 @@ public final class Ota {
 
     static void download(Context ctx, Info i) throws Exception {
         if (!DIR.isDirectory()) throw new IOException(DIR + " is missing");
+        // A partial file is only resumed if it belongs to this exact package (marker holds the expected SHA-256);
+        // resuming another build's file would append mismatched bytes and fail the hash check after a full download.
+        String marker = "";
+        try (InputStream in = new FileInputStream(META)) {
+            byte[] b = new byte[128];
+            int n = in.read(b);
+            if (n > 0) marker = new String(b, 0, n, "UTF-8").trim();
+        } catch (IOException ignored) {
+        }
+        if (!i.zipSha.equals(marker)) PKG.delete();
         long have = PKG.isFile() ? PKG.length() : 0;
         if (have > i.zipSize) {
             PKG.delete();
             have = 0;
         }
-        // Keep this file only: old packages from earlier updates go away.
+        // Keep this package only: old packages from earlier updates go away.
         File[] old = DIR.listFiles();
-        if (old != null) for (File f : old) if (!f.equals(PKG)) f.delete();
+        if (old != null) for (File f : old) if (!f.equals(PKG) && !f.equals(META)) f.delete();
+        try (FileOutputStream m = new FileOutputStream(META)) {
+            m.write(i.zipSha.getBytes("UTF-8"));
+        }
         long free = new StatFs(DIR.getPath()).getAvailableBytes();
         if (free < (i.zipSize - have) + (512L << 20))
             throw new IOException("not enough free storage: need " + ((i.zipSize - have) >> 20) + " MB + 512 MB spare");
