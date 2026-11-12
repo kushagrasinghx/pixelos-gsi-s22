@@ -16,6 +16,7 @@ PAY_LEN=@@PAY_LEN@@
 IMG_SIZE=@@IMG_SIZE@@
 IMG_SHA=@@IMG_SHA@@
 VERSION="@@VERSION@@"
+IMG_MB="@@IMG_MB@@"
 
 OUTFD=$2
 PKG=$3
@@ -81,8 +82,11 @@ SYS=/dev/block/mapper/system
 CUR=$(blockdev --getsize64 $SYS)
 [ "$CUR" -ge "$IMG_SIZE" ] || abort "system is $CUR bytes, need $IMG_SIZE"
 
-ui_print "- Writing system ($((IMG_SIZE / 1048576)) MB), this takes a few minutes..."
-payload | $XZ | dd of=$SYS bs=1M 2>/dev/null
+# IMG_MB comes from make_ota.py: TWRP's shell does 32-bit arithmetic, so $((IMG_SIZE / 1048576)) came out negative.
+ui_print "- Writing system ($IMG_MB MB), this takes a few minutes..."
+# xzcat writes the partition itself: TWRP's toybox dd fails reading a pipe with bs=1M ("read error: Bad address"),
+# which left system unwritten in the first v1.3 OTA attempt.
+payload | $XZ > $SYS || abort "writing system failed"
 ui_print "- Verifying..."
 SUM=$(head -c $IMG_SIZE $SYS | sha256sum | cut -d' ' -f1)
 if [ "$SUM" != "$IMG_SHA" ]; then

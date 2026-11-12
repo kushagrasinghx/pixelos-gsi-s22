@@ -29,7 +29,7 @@ def render(tpl, off, length, img_size, img_sha, version, bb_off=0, bb_len=0):
     return (tpl.replace("@@PAY_OFF@@", num(off)).replace("@@PAY_LEN@@", num(length))
                .replace("@@BB_OFF@@", num(bb_off)).replace("@@BB_LEN@@", num(bb_len))
                .replace("@@IMG_SIZE@@", num(img_size)).replace("@@IMG_SHA@@", img_sha)
-               .replace("@@VERSION@@", version)).encode()
+               .replace("@@VERSION@@", version).replace("@@IMG_MB@@", str(img_size >> 20))).encode()
 
 
 def data_offset(path, name):
