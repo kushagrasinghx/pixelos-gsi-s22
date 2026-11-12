@@ -45,8 +45,13 @@ grep -q '^ro.r0q.version=v' "$S/build.prop" && ok "ro.r0q.version $(grep '^ro.r0
 prop build.prop "ro.r0q.ota.url=https://github.com/kushagrasinghx/pixelos-gsi-s22/releases/latest/download/ota.json"
 U=$(grep '^ro.system.build.date.utc=' "$S/build.prop" | cut -d= -f2)
 [ -n "$U" ] && [ "$U" != 1782680941 ] && ok "ro.system.build.date.utc=$U" || bad "build date still Doze-off's ($U)"
-unzip -l "$S/app/R0qBattery/R0qBattery.apk" 2>/dev/null | grep -q classes2.dex && unzip -p "$S/app/R0qBattery/R0qBattery.apk" classes2.dex | grep -aq 'Lme/kushagra/r0q/battery/ota/Ota;' \
+unzip -l "$S/app/R0qBattery/R0qBattery.apk" 2>/dev/null | grep -q classes2.dex && [ "$(unzip -p "$S/app/R0qBattery/R0qBattery.apk" classes2.dex | grep -ac 'Lme/kushagra/r0q/battery/ota/Ota;')" -gt 0 ] \
   && ok "R0qBattery has the OTA updater" || bad "R0qBattery has no OTA updater (classes2.dex)"
+has product/overlay/R0qSettingsOverlay.apk
+prop build.prop "net.pixelos.version=16.2"
+prop build.prop "ro.system.ota.json_url=https://github.com/kushagrasinghx/pixelos-gsi-s22/releases/latest/download/ota.json"
+# grep -c, not -q: -q stops reading early and pipefail then counts unzip's broken pipe as a failure.
+[ "$(unzip -p "$S/priv-app/TrebleApp/TrebleApp.apk" 'classes*.dex' | grep -ac 'me.kushagra.r0q.battery.ota.UpdaterActivity')" -gt 0 ] && ok "TrebleApp System updates -> PixelOS updates" || bad "TrebleApp updater not redirected"
 grep -q '(allow system_app ota_package_file (file' "$S/product/etc/selinux/product_sepolicy.cil" && ok "product sepolicy: system_app -> ota_package_file" || bad "product sepolicy lacks the ota_package_file rule"
 has product/etc/displayconfig/display_port_130.xml
 has app/R0qBattery/R0qBattery.apk

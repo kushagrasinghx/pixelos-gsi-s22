@@ -29,6 +29,7 @@ There is no full AOSP source build, so a build takes a few minutes, not hours.
 | USB audio | Samsung's usb_notify host lock released, and USB DACs routed through Samsung's primary HAL (DSP), like stock. | `audio/`, `r0q-audio.rc` |
 | Fingerprint | Under-display sensor: no HAL restarts at boot (they lost the enrolled user), touchscreen FOD mode on, correct icon size. | `make_pixelos_r0q.sh`, `systemui_values.xml`, `r0q-perf.rc` |
 | Wi-Fi | 5 GHz hotspot on channel 149, the only 5 GHz channel Samsung's hostapd accepts. | `wifi_values.xml` |
+| Updates | In-ROM updater (Settings > System > PixelOS updates) with TWRP/OrangeFox one-tap install. The useless *System updates* entry (Google's screen) is hidden, and Phh Treble Settings' *System updates* opens PixelOS updates. | `battery/` (ota), `ota/`, `settings_values.xml`, `trebleapp-patch/` |
 | Apps | Google Phone, Google Messages, Gboard and Google Photos preinstalled instead of the AOSP apps. | `make_pixelos_r0q.sh` |
 
 ## Building
@@ -106,6 +107,8 @@ brightness_values.xml      R0qBrightnessOverlay (backlight table + auto-brightne
 display_port_130.xml       display config: brightness range, HBM, slider mapping
 systemui_values.xml        R0qSystemUIOverlay (status bar, fingerprint icon size)
 wifi_values.xml            R0qWifiOverlay (5 GHz hotspot channel)
+trebleapp-patch/           TrebleApp patch: its System updates entry opens PixelOS updates
+settings_values.xml        R0qSettingsOverlay (hides Settings > System > System updates)
 systemui-patch/            SystemUI smali patches: charging text, status bar, flashlight levels, location dot
 battery/                   R0qBattery: battery protection, Dolby Atmos, flashlight levels, 120 Hz, brightness fixes
 radiohelper/               R0qRadioHelper: FW_READY for Samsung's RIL (signal bars)

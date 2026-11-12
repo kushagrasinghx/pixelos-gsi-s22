@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- R0qSettingsOverlay: hide Settings > System > "System updates". On this GSI it opens Google Play services' system
+     update screen, which only knows Google's own builds. Updates live in Settings > System > PixelOS updates
+     (R0qBattery). -->
+<resources>
+    <bool name="config_show_system_update_settings">false</bool>
+</resources>

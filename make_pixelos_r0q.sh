@@ -143,6 +143,9 @@ add $K/pixelos-scripts/r0q-audio.rc $S/etc/init/r0q-audio.rc 644
 #    collapsed (empty dark disc / white sliver). R0qSystemUIOverlay sets pixel_pitch = 60 um (systemui_values.xml).
 #    R0qSystemUIOverlay also carries the One UI-style status bar: lockscreen bar padding 8dp, network type 10sp, clock 14sp.
 add $K/rro/R0qSystemUIOverlay.apk $S/product/overlay/R0qSystemUIOverlay.apk 644
+# R0qSettingsOverlay (settings_values.xml): hides Settings > System > "System updates", which opened Google Play
+# services' update screen (Google builds only). Updates are in Settings > System > PixelOS updates (R0qBattery).
+add $K/rro/R0qSettingsOverlay.apk $S/product/overlay/R0qSettingsOverlay.apk 644
 # b) phh-on-boot.sh restarts vendor.fps_hal at boot_completed. The HAL then forgets the active user the framework set
 #    earlier, and Android 16's HidlToAidlSensorAdapter never re-sends setActiveGroup after a HAL death, so enroll fails
 #    ("enroll gid != m_active_group -1") and the cleanup enumerate DELETES existing fingerprints. Disable those restarts.
@@ -176,6 +179,16 @@ cat $W/SystemUI-patched.apk > $SUI   # keep the original inode: owner, mode, SEL
 rm -f $W/SystemUI-patched.apk $W/SystemUI-patched.apk.idsig
 rm -rf $S/system_ext/priv-app/SystemUI/oat
 log "SystemUI: One UI charging text patched in"
+
+# TrebleApp: its "System updates" entry (phh's UpdaterActivity) opens the r0q updater instead
+# (trebleapp-patch/build_trebleapp.sh). TrebleApp only enables that activity while ro.system.ota.json_url is set,
+# so the release props below set it to our ota.json. Step 4 re-signs it with the same platform key.
+TA=$S/priv-app/TrebleApp/TrebleApp.apk
+bash $K/pixelos-scripts/trebleapp-patch/build_trebleapp.sh $TA $W/TrebleApp-patched.apk
+cat $W/TrebleApp-patched.apk > $TA   # keep the original inode: owner, mode, SELinux label
+rm -f $W/TrebleApp-patched.apk $W/TrebleApp-patched.apk.idsig
+rm -rf $S/priv-app/TrebleApp/oat
+log "TrebleApp: System updates -> PixelOS updates"
 
 # Signal bars: Samsung's RIL keeps standard signal strength empty until the framework sends FW_READY over
 # ISehRadio. Doze's telephony-common has that code but the Samsung HIDL Java classes it needs are missing from the
@@ -309,6 +322,9 @@ cat >> $S/build.prop <<EOF
 # r0q release
 ro.r0q.version=$VERSION
 ro.r0q.ota.url=https://github.com/kushagrasinghx/pixelos-gsi-s22/releases/latest/download/ota.json
+# Non-empty so TrebleApp keeps its updater entry enabled (it now opens PixelOS updates). phh's own updater would
+# reject this manifest format, but it never runs: build_trebleapp.sh redirects it.
+ro.system.ota.json_url=https://github.com/kushagrasinghx/pixelos-gsi-s22/releases/latest/download/ota.json
 # PixelOS's identity marker (device builds set it; Doze-off's GSI doesn't). Play Integrity Fork / AlwaysStrong look for
 # it to switch off PixelOS's own GMS spoof (persist.sys.pihooks.disable.*). Without it they only act while those props
 # already exist, and the props were gone after each system update (seen after v1.1 and v1.2), so the attestation
