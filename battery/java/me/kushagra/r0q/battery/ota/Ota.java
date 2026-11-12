@@ -158,8 +158,25 @@ public final class Ota {
 
     // ---- scheduling / notifications ----
 
+    /**
+     * Google Play services' SystemUpdateActivity (Google's own OTA screen, useless on this GSI) and TrebleApp's updater
+     * (patched to open ours) both answer android.settings.SYSTEM_UPDATE_SETTINGS at the same priority, so Android
+     * asked which one to use. Disabled at every boot so a Play services update can't bring the chooser back.
+     */
+    static void disableGmsSystemUpdate(Context ctx) {
+        try {
+            ctx.getPackageManager().setComponentEnabledSetting(
+                    new ComponentName("com.google.android.gms", "com.google.android.gms.update.SystemUpdateActivity"),
+                    android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    android.content.pm.PackageManager.DONT_KILL_APP);
+        } catch (Throwable t) {
+            Log.w(TAG, "couldn't disable GMS SystemUpdateActivity", t);
+        }
+    }
+
     /** Daily background check. Called from R0qApp.onCreate (persistent app, so every boot). */
     public static void schedule(Context ctx) {
+        disableGmsSystemUpdate(ctx);
         try {
             JobScheduler js = ctx.getSystemService(JobScheduler.class);
             if (js == null || js.getPendingJob(JOB_ID) != null) return;

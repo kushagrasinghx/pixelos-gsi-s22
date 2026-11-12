@@ -48,6 +48,12 @@ U=$(grep '^ro.system.build.date.utc=' "$S/build.prop" | cut -d= -f2)
 unzip -l "$S/app/R0qBattery/R0qBattery.apk" 2>/dev/null | grep -q classes2.dex && [ "$(unzip -p "$S/app/R0qBattery/R0qBattery.apk" classes2.dex | grep -ac 'Lme/kushagra/r0q/battery/ota/Ota;')" -gt 0 ] \
   && ok "R0qBattery has the OTA updater" || bad "R0qBattery has no OTA updater (classes2.dex)"
 has product/overlay/R0qSettingsOverlay.apk
+has product/app/GoogleCalendar/GoogleCalendar.apk
+has product/app/GoogleCalendar/split_config.arm64_v8a.apk
+has product/app/GoogleClock/GoogleClock.apk
+has product/app/GoogleClock/split_config.xxhdpi.apk
+nohas product/app/Calendar
+nohas product/app/DeskClock
 prop build.prop "net.pixelos.version=16.2"
 prop build.prop "ro.system.ota.json_url=https://github.com/kushagrasinghx/pixelos-gsi-s22/releases/latest/download/ota.json"
 # grep -c, not -q: -q stops reading early and pipefail then counts unzip's broken pipe as a failure.

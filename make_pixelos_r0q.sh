@@ -285,6 +285,14 @@ rmv $S/product/priv-app/Dialer $S/product/app/messaging $S/priv-app/MtkInCallSer
 # pixel_2016_exclusive.xml + NEXUS_PRELOAD, so Photos gets unlimited Storage-saver backup with no extra patching.
 add $G/Gboard-18.6.3.1002251336-arm64.apk          $S/product/app/LatinIMEGooglePrebuilt/LatinIMEGooglePrebuilt.apk 644
 add $G/GooglePhotos-8.0.0.1011730683-arm64.apk     $S/product/app/Photos/Photos.apk 644
+# Google Calendar (2026.43.1) and Google Clock (9.2) instead of AOSP Calendar / DeskClock (Android 16 builds from Play,
+# Google-signed). Shipped as Play delivers them: base + config splits (Calendar: arm64 + en + xxhdpi, which its
+# requiredSplitTypes base__abi,base__density need; Clock: xxhdpi). Split apps preinstall fine from a system folder
+# (Play services does the same here). Calendar's native libs are stored uncompressed (extractNativeLibs=false).
+rmv $S/product/app/Calendar $S/product/app/DeskClock
+for d in GoogleCalendar GoogleClock; do
+  for f in $G/$d/*.apk; do add $f $S/product/app/$d/$(basename $f) 644; done
+done
 rmv $S/product/app/LatinIME $S/app/Gallery2 $S/product/app/Gallery2 $S/system_ext/app/Gallery2
 # Preinstalled apps don't get their native libs extracted by PackageManager. Messages and Photos ship them
 # compressed (extractNativeLibs default true), so pre-extract lib/arm64-v8a/*.so into <app>/lib/arm64/
