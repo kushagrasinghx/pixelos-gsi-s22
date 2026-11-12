@@ -45,6 +45,7 @@ The build runs as **root in WSL2 / Linux** (it keeps file owners, modes, SELinux
 | PhhIms APK | Built from [krazey/ims](https://github.com/krazey/ims) | `keep/system-files/priv-app/PhhIms/` |
 | Google Phone, Messages, Gboard, Photos APKs (arm64) | Google (e.g. via APKMirror) | `keep/gapps/` |
 | Samsung radio HIDL Java classes (`vendor.samsung.hardware.radio.V2_x`) | Extracted from a Samsung `framework.jar` (One UI / UN1CA). Proprietary, so not redistributed. | Bundled into `R0qRadioHelper` by `radiohelper/build.sh` |
+| Android SDK: `platforms/android-36/android.jar`, `build-tools/36.0.0` (`d8.jar`, `core-lambda-stubs.jar`) | Android Studio / sdkmanager | Compiles R0qBattery's Java updater (`SDK_DIR` in `battery/build.sh`) |
 | Ubuntu packages | `erofs-utils` (1.9+, keeps file capabilities), `smali`/`baksmali`, `python3`, `rsync`, `xz-utils`, Java | |
 
 The scripts use absolute paths from my setup (`/mnt/d/S22/ProjectInfinityX/keep`, `/home/kushagra/pixelos`). Edit the
@@ -56,11 +57,12 @@ variables at the top of each script for yours.
    - `build_rro.sh <name> <target> <package> <values.xml|res-dir> [priority] [target-name]` for each overlay (brightness, SystemUI, Wi-Fi; the Wi-Fi one needs target-name `WifiCustomization`);
    - `battery/build.sh` (R0qBattery);
    - `radiohelper/build.sh`.
-2. `sudo bash make_pixelos_r0q.sh`: copies the image tree, trims other devices' files, adds the r0q layer, patches SystemUI (`systemui-patch/build_systemui.sh`), re-signs the platform-key APKs, and writes an EROFS `system.img` with an AVB hashtree footer.
+2. `sudo VERSION=v1.2 bash make_pixelos_r0q.sh`: copies the image tree, trims other devices' files, adds the r0q layer, patches SystemUI (`systemui-patch/build_systemui.sh`), re-signs the platform-key APKs, and writes an EROFS `system.img` with an AVB hashtree footer.
    - The default is a release build: stock adb, off by default, with authorization.
    - `RELEASE=0` gives a debug build: adb on, no authorization.
+   - `VERSION` is required. The build date (`ro.system.build.date.utc`) is set to the build time (`BUILD_UTC` to override), which the updater compares.
 3. `sudo bash verify_release.sh`: mounts the image read-only and checks every change is inside.
-4. Compress for distribution: `xz -T0 -6 -k system.img`. DSU Sideloader accepts `.img.xz` directly.
+4. `sudo bash ota/release.sh changelog.txt`: writes `<name>.img.xz`, `<name>-twrp.zip`, `ota.json` and checksums into `builds/`. Upload them to a GitHub release tagged `<version>-<date>` and mark it latest. DSU Sideloader accepts the `.img.xz` directly.
 
 `rebuild_img.sh` re-runs only the image step on an already prepared tree.
 
@@ -72,6 +74,25 @@ verification disabled, then recovery → *Enter fastboot* (TWRP: Advanced → Fa
 
 Updating between releases keeps data: flash only `system` and don't wipe. This works because every release is signed
 with the same keys.
+
+## OTA updates (in the ROM)
+
+R0qBattery includes an updater: **Settings > System > PixelOS updates**, plus a notification when a new build is out.
+
+- **Check:** once a day it reads `ota.json` from the latest GitHub release (`ro.r0q.ota.url`). A release is newer when its
+  `build_utc` is later than the phone's `ro.system.build.date.utc`.
+- **Install with TWRP / OrangeFox:** the app downloads `<name>-twrp.zip` into `/data/ota_package` (resumable,
+  SHA-256 checked) and calls `RecoverySystem.installPackage()`. Android's uncrypt writes the zip's blocks out unencrypted
+  and records them in `/cache/recovery/block.map`, then the phone reboots into recovery with
+  `--update_package=@/cache/recovery/block.map`. Recovery reads the zip from those blocks, so it doesn't need to decrypt
+  `/data`. The zip's `update-binary` (`ota/update-binary.sh`) resizes `system` to the image size, streams
+  `system.img.xz` into it and checks its SHA-256. Data is kept.
+- **Install from PC:** for stock recovery (it only accepts Samsung-signed zips). The app shows the fastboot steps
+  and opens the release page.
+- **Why not install from Android directly:** the system partition is in use while Android runs, the S22 has no
+  second slot, and kernels with Baseband-guard block writes to `super` from Android.
+- `ota/update-binary-test.sh` is a dry run (reads the payload through the block map and probes super writes in recovery,
+  changes nothing) for testing the path on a device.
 
 ## Repository layout
 
@@ -92,6 +113,7 @@ audio/                     vendor audio policy + USB devices on Samsung's primar
 r0q-*.rc                   init scripts: battery protection, USB audio, performance / fingerprint
 r0q_gsi/                   IMS layer sources (overlays, PhhIms permissions) and the earlier Infinity X source-build layer
 dolby/test/, torch/test/   small app_process probes used to find Dolby parameters and torch levels
+ota/                       OTA packaging (make_ota.py, release.sh) and the recovery installer (update-binary.sh)
 ```
 
 ## Known limitations

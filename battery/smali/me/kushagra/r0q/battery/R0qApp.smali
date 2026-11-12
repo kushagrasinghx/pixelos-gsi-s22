@@ -23,6 +23,8 @@
     invoke-static {}, Lme/kushagra/r0q/battery/DolbyController;->apply()V
     invoke-direct {p0}, Lme/kushagra/r0q/battery/R0qApp;->addTileOnce()V
     invoke-static {p0}, Lme/kushagra/r0q/battery/TorchLevel;->start(Landroid/content/Context;)V
+    # Daily OTA check (ota/Ota.java, compiled into classes2.dex by build.sh).
+    invoke-static {p0}, Lme/kushagra/r0q/battery/ota/Ota;->schedule(Landroid/content/Context;)V
     new-instance v0, Landroid/os/Handler;
     invoke-static {}, Landroid/os/Looper;->getMainLooper()Landroid/os/Looper;
     move-result-object v1

@@ -6,9 +6,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="me.kushagra.r0q.battery"
     android:sharedUserId="android.uid.system"
-    android:versionCode="1" android:versionName="1.0">
+    android:versionCode="2" android:versionName="1.2">
+    <!-- In-ROM updater (ota/): GitHub check, notification, download into /data/ota_package, RecoverySystem install. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.RECOVERY" />
+    <uses-permission android:name="android.permission.REBOOT" />
     <!-- Also hosts Dolby Atmos (DolbyController/DolbyActivity/DolbyTile): persistent so the Dolby effect stays attached. -->
     <application android:name=".R0qApp" android:persistent="true"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:label="Battery protection" android:allowBackup="false">
         <activity android:name=".ProtectionActivity"
             android:exported="true"
@@ -60,5 +68,22 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+        <!-- PixelOS updates: Settings > System entry and the update notification's target. -->
+        <activity android:name=".ota.UpdaterActivity"
+            android:exported="true"
+            android:label="PixelOS updates"
+            android:theme="@android:style/Theme.DeviceDefault.DayNight"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="com.android.settings.action.IA_SETTINGS" />
+            </intent-filter>
+            <meta-data android:name="com.android.settings.category" android:value="com.android.settings.category.ia.system" />
+            <meta-data android:name="com.android.settings.summary" android:value="Check for and install new PixelOS r0q builds" />
+            <meta-data android:name="com.android.settings.icon" android:resource="@drawable/ic_update" />
+            <meta-data android:name="com.android.settings.icon_tintable" android:value="true" />
+        </activity>
+        <service android:name=".ota.OtaJobService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
     </application>
 </manifest>

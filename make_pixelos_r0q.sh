@@ -241,7 +241,12 @@ PSEPOL=$S/product/etc/selinux/product_sepolicy.cil
 printf '(allow init vendor_sysfs_kgsl (file (write open getattr)))\n' >> $PSEPOL   # append: keeps inode + label
 # r0q-audio.rc writes Samsung usb_notify's usb_sl (sysfs_usb) to unblock USB host mode (compile-checked 2026-11-11: adds it).
 printf '(allow init sysfs_usb (file (write open getattr)))\n' >> $PSEPOL
-log "product_sepolicy.cil: init may write kgsl + usb_notify sysfs ($(wc -l < $PSEPOL) lines)"
+# In-ROM updater (R0qBattery, system_app): download the recovery zip into /data/ota_package (where uncrypt may read it)
+# and call RecoverySystem.installPackage. AOSP gives system_app no access to ota_package_file.
+printf '(allow system_app ota_package_file (dir (search getattr open read write add_name remove_name)))\n' >> $PSEPOL
+printf '(allow system_app ota_package_file (file (create getattr setattr open read write append unlink ioctl lock map)))\n' >> $PSEPOL
+printf '(allow system_app recovery_service (service_manager (find)))\n' >> $PSEPOL
+log "product_sepolicy.cil: init may write kgsl + usb_notify sysfs; system_app may use /data/ota_package + recovery ($(wc -l < $PSEPOL) lines)"
 # Tested and rejected 2026-11-11 (don't re-add): Graphite RenderEngine (needs backend prop unset; no gain over
 # Ganesh), Pixel SF work durations (worse pacing on this HWC; and with use_phase_offsets_as_durations=1 SF aborts
 # unless every vendor debug.sf.*phase_offset_ns is cleared). Unsetting debug.renderengine.backend falls back to GLES.
@@ -279,6 +284,34 @@ for app in product/app/PrebuiltBugle/PrebuiltBugle.apk product/app/Photos/Photos
   n=$(ls $W/libx/lib/arm64-v8a/*.so | wc -l); [ "$(ls $d/*.so | wc -l)" = "$n" ] || { log "lib extraction incomplete for $app"; exit 1; }
   log "extracted $n arm64 libs for $app"
 done
+# Version + OTA (R0qBattery updater, ota/): VERSION=v1.2 names this build; BUILD_UTC (default: now) replaces Doze-off's
+# build date, which every r0q release used to share, so the updater can tell releases apart (it compares
+# ro.system.build.date.utc with ota.json's build_utc). ota/release.sh passes the same BUILD_UTC to make_ota.py.
+VERSION=${VERSION:?set VERSION, e.g. VERSION=v1.2}
+BUILD_UTC=${BUILD_UTC:-$(date +%s)}
+BUILD_DATE=$(LC_ALL=C date -u -d @$BUILD_UTC '+%a %b %e %H:%M:%S UTC %Y')
+# Rewrite in place (sed -i would replace the inode and drop the SELinux label).
+python3 - "$BUILD_UTC" "$BUILD_DATE" $S/build.prop $S/product/etc/build.prop $S/system_ext/etc/build.prop <<'EOF'
+import re, sys
+utc, date = sys.argv[1], sys.argv[2]
+for p in sys.argv[3:]:
+    try:
+        f = open(p, "r+")
+    except FileNotFoundError:
+        continue
+    s = f.read()
+    t = re.sub(r"(?m)^(ro\.(?:[a-z_]+\.)?build\.date\.utc)=.*$", r"\g<1>=" + utc, s)
+    t = re.sub(r"(?m)^(ro\.(?:[a-z_]+\.)?build\.date)=.*$", r"\g<1>=" + date, t)
+    f.seek(0); f.write(t); f.truncate(); f.close()
+EOF
+cat >> $S/build.prop <<EOF
+
+# r0q release
+ro.r0q.version=$VERSION
+ro.r0q.ota.url=https://github.com/kushagrasinghx/pixelos-gsi-s22/releases/latest/download/ota.json
+EOF
+echo "$VERSION $BUILD_UTC" > $OUT/version.txt
+log "version $VERSION, build date $BUILD_DATE ($BUILD_UTC)"
 # Props: IMS toggles (VoLTE / VoWiFi availability; kept for release, calling depends on them).
 # RELEASE=0 adds the debug-only bring-up props: adb on by default and without authorization (logcat on DSU).
 RELEASE=${RELEASE:-1}
