@@ -30,7 +30,7 @@ There is no full AOSP source build, so a build takes a few minutes, not hours.
 | Fingerprint | Under-display sensor: no HAL restarts at boot (they lost the enrolled user), touchscreen FOD mode on, correct icon size. | `make_pixelos_r0q.sh`, `systemui_values.xml`, `r0q-perf.rc` |
 | Wi-Fi | 5 GHz hotspot on channel 149, the only 5 GHz channel Samsung's hostapd accepts. | `wifi_values.xml` |
 | Updates | In-ROM updater (Settings > System > PixelOS updates) with TWRP/OrangeFox one-tap install. The useless *System updates* entry (Google's screen) is hidden, and Phh Treble Settings' *System updates* opens PixelOS updates. | `battery/` (ota), `ota/`, `settings_values.xml`, `trebleapp-patch/` |
-| Apps | Google Phone, Google Messages, Gboard and Google Photos preinstalled instead of the AOSP apps. | `make_pixelos_r0q.sh` |
+| Apps | Google Phone, Messages, Gboard, Photos, Calendar and Clock preinstalled instead of the AOSP apps. | `make_pixelos_r0q.sh` |
 
 ## Building
 
@@ -44,7 +44,7 @@ The build runs as **root in WSL2 / Linux** (it keeps file owners, modes, SELinux
 | AOSP host tools: `aapt2`, `apksigner.jar`, `zipalign`, `avbtool` (+ `lib64/`) | An AOSP build or SDK build-tools | `keep/host-tools/` |
 | AOSP test keys (`platform.pk8` / `.x509.pem`, `testkey_rsa2048.pem`) | AOSP `build/make/target/product/security/` and `external/avb/test/data/` | `keep/keys/` |
 | PhhIms APK | Built from [krazey/ims](https://github.com/krazey/ims) | `keep/system-files/priv-app/PhhIms/` |
-| Google Phone, Messages, Gboard, Photos APKs (arm64) | Google (e.g. via APKMirror) | `keep/gapps/` |
+| Google Phone, Messages, Gboard, Photos APKs (arm64); Google Calendar and Clock (base + config splits, pulled from a Play install) | Google (e.g. via APKMirror / Play) | `keep/gapps/` |
 | Samsung radio HIDL Java classes (`vendor.samsung.hardware.radio.V2_x`) | Extracted from a Samsung `framework.jar` (One UI / UN1CA). Proprietary, so not redistributed. | Bundled into `R0qRadioHelper` by `radiohelper/build.sh` |
 | Android SDK: `platforms/android-36/android.jar`, `build-tools/36.0.0` (`d8.jar`, `core-lambda-stubs.jar`) | Android Studio / sdkmanager | Compiles R0qBattery's Java updater (`SDK_DIR` in `battery/build.sh`) |
 | Ubuntu packages | `erofs-utils` (1.9+, keeps file capabilities), `smali`/`baksmali`, `python3`, `rsync`, `xz-utils`, Java | |
