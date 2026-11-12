@@ -53,7 +53,7 @@ variables at the top of each script for yours.
 ### Steps
 
 1. Build the small APKs and overlays:
-   - `build_rro.sh <name> <target> <package> <values.xml|res-dir> [priority]` for each overlay (brightness, SystemUI, Wi-Fi);
+   - `build_rro.sh <name> <target> <package> <values.xml|res-dir> [priority] [target-name]` for each overlay (brightness, SystemUI, Wi-Fi; the Wi-Fi one needs target-name `WifiCustomization`);
    - `battery/build.sh` (R0qBattery);
    - `radiohelper/build.sh`.
 2. `sudo bash make_pixelos_r0q.sh`: copies the image tree, trims other devices' files, adds the r0q layer, patches SystemUI (`systemui-patch/build_systemui.sh`), re-signs the platform-key APKs, and writes an EROFS `system.img` with an AVB hashtree footer.

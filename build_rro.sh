@@ -1,8 +1,11 @@
 #!/bin/bash
 # Build small static RROs for PixelOS r0q with aapt2 and sign them with the AOSP platform test key.
-#   build_rro.sh <name> <target-package> <package-name> <values.xml|res-dir> [priority]
+#   build_rro.sh <name> <target-package> <package-name> <values.xml|res-dir> [priority] [target-overlayable-name]
+# The target-overlayable-name is required when the target declares <overlayable> groups (e.g. WifiCustomization for
+# com.android.wifi.resources): without android:targetName idmap2 maps nothing ("no resources were overlaid").
 set -euo pipefail
-NAME=$1; TARGET=$2; PKG=$3; VALUES=$4; PRIO=${5:-995}
+NAME=$1; TARGET=$2; PKG=$3; VALUES=$4; PRIO=${5:-995}; TNAME=${6:-}
+TN=""; [ -n "$TNAME" ] && TN=" android:targetName=\"$TNAME\""
 K=/mnt/d/S22/ProjectInfinityX/keep
 H=$K/host-tools
 export LD_LIBRARY_PATH=$H/lib64
@@ -16,7 +19,7 @@ cat > $W/AndroidManifest.xml <<EOF
     <!-- Required: without an <application> element Android 16's parser rejects this manifest ("<manifest> does not
          contain an <application> or <instrumentation>"), so the overlay silently never loads from the image. -->
     <application android:hasCode="false"/>
-    <overlay android:targetPackage="$TARGET" android:isStatic="true" android:priority="$PRIO" />
+    <overlay android:targetPackage="$TARGET"$TN android:isStatic="true" android:priority="$PRIO" />
 </manifest>
 EOF
 $H/aapt2 compile --dir $W/res -o $W/res.zip

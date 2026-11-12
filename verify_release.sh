@@ -28,6 +28,11 @@ for a in "$S"/product/overlay/R0q*.apk; do
   LD_LIBRARY_PATH=$H/lib64 $H/aapt2 dump xmltree --file AndroidManifest.xml "$a" 2>/dev/null | grep -qE '^ +E: (application|instrumentation) ' \
     && ok "manifest has <application> ${a#$S/}" || bad "no <application> in manifest (Android skips it) ${a#$S/}"
 done
+# com.android.wifi.resources declares <overlayable name="WifiCustomization">: without android:targetName idmap2 maps
+# nothing (STATE_NO_IDMAP), which is how v1.1 shipped R0qWifiOverlay.
+LD_LIBRARY_PATH=$H/lib64 $H/aapt2 dump xmltree --file AndroidManifest.xml "$S/product/overlay/R0qWifiOverlay.apk" 2>/dev/null \
+  | grep -q 'targetName(0x0101044d)="WifiCustomization"' && ok "R0qWifiOverlay targets WifiCustomization" \
+  || bad "R0qWifiOverlay has no targetName=WifiCustomization (idmap maps nothing)"
 # Pre-extracted native libs: every lib/arm64-v8a/*.so in the APK must be in <app>/lib/arm64/ (the 2026-11-11 release
 # put all but one into product/ instead, and Messages crashed on libgoogle3.so). No stray .so directly in product/.
 for app in product/app/PrebuiltBugle/PrebuiltBugle.apk product/app/Photos/Photos.apk; do
