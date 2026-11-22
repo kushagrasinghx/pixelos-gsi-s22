@@ -45,8 +45,12 @@ grep -q '^ro.r0q.version=v' "$S/build.prop" && ok "ro.r0q.version $(grep '^ro.r0
 prop build.prop "ro.r0q.ota.url=https://github.com/kushagrasinghx/pixelos-gsi-s22/releases/latest/download/ota.json"
 U=$(grep '^ro.system.build.date.utc=' "$S/build.prop" | cut -d= -f2)
 [ -n "$U" ] && [ "$U" != 1782680941 ] && ok "ro.system.build.date.utc=$U" || bad "build date still Doze-off's ($U)"
+# Must change every release, or updated phones keep cached manifests of changed system apps (PackageManager).
+INC=$(cat "$S/build.prop" "$S/product/etc/build.prop" "$S/system_ext/etc/build.prop" | grep -E '^ro\.([a-z_]+\.)?build\.version\.incremental=' | cut -d= -f2 | sort -u)
+[ -n "$U" ] && [ "$INC" = "$U" ] && ok "build incremental=$U in all partitions (package cache refreshes on update)" || bad "build incremental ($(echo $INC)) is not the build time ($U)"
 unzip -l "$S/app/R0qBattery/R0qBattery.apk" 2>/dev/null | grep -q classes2.dex && [ "$(unzip -p "$S/app/R0qBattery/R0qBattery.apk" classes2.dex | grep -ac 'Lme/kushagra/r0q/battery/ota/Ota;')" -gt 0 ] \
   && ok "R0qBattery has the OTA updater" || bad "R0qBattery has no OTA updater (classes2.dex)"
+[ "$(unzip -p "$S/app/R0qBattery/R0qBattery.apk" classes2.dex | grep -ac 'Lme/kushagra/r0q/battery/restore/RestoreActivity;')" -gt 0 ]   && ok "R0qBattery has Restore Google backup" || bad "R0qBattery has no RestoreActivity (Google restore entry)"
 has product/overlay/R0qSettingsOverlay.apk
 has product/app/GoogleCalendar/GoogleCalendar.apk
 has product/app/GoogleCalendar/split_config.arm64_v8a.apk
@@ -58,12 +62,23 @@ prop build.prop "net.pixelos.version=16.2"
 prop build.prop "ro.system.ota.json_url=https://github.com/kushagrasinghx/pixelos-gsi-s22/releases/latest/download/ota.json"
 # grep -c, not -q: -q stops reading early and pipefail then counts unzip's broken pipe as a failure.
 [ "$(unzip -p "$S/priv-app/TrebleApp/TrebleApp.apk" 'classes*.dex' | grep -ac 'me.kushagra.r0q.battery.ota.UpdaterActivity')" -gt 0 ] && ok "TrebleApp System updates -> PixelOS updates" || bad "TrebleApp updater not redirected"
+# 2G/3G call audio on either SIM: Telecom sends the slot, TrebleApp must not override it.
+[ "$(unzip -p "$S/priv-app/Telecom/Telecom.apk" 'classes*.dex' | grep -ac 'Lme/kushagra/r0q/SimSlot;')" -gt 0 ] && ok "Telecom sends the call's SIM slot" || bad "Telecom SIM slot patch missing"
+[ "$(unzip -p "$S/priv-app/TrebleApp/TrebleApp.apk" 'classes*.dex' | grep -ac 'g_call_sim_slot')" = 0 ] && ok "TrebleApp doesn't send g_call_sim_slot" || bad "TrebleApp still sends the data SIM as the call slot"
+nohas priv-app/Telecom/oat
 grep -q '(allow system_app ota_package_file (file' "$S/product/etc/selinux/product_sepolicy.cil" && ok "product sepolicy: system_app -> ota_package_file" || bad "product sepolicy lacks the ota_package_file rule"
 has product/etc/displayconfig/display_port_130.xml
 has app/R0qBattery/R0qBattery.apk
 has etc/init/r0q-battery.rc
 has etc/init/r0q-audio.rc
 has etc/r0q/audio_policy_configuration.xml
+# Call mic: without this input port AOSP drops VOIP_TX and Samsung's HAL records calls with rec-main-mic (very quiet).
+python3 -I -c 'import sys, xml.etree.ElementTree as T
+m = T.parse(sys.argv[1]).getroot().find("modules/module")
+n = {p.get("name") for p in m.iter("mixPort") if p.get("role") == "sink" and p.get("flags") == "AUDIO_INPUT_FLAG_VOIP_TX"}
+sys.exit(not any(r.get("sink") in n and "Built-In Mic" in r.get("sources").split(",") for r in m.iter("route")))' \
+  "$S/etc/r0q/audio_policy_configuration.xml" && ok "audio policy routes the mic to a VOIP_TX input" \
+  || bad "audio policy has no VOIP_TX mic input (quiet call mic)"
 has product/app/LatinIMEGooglePrebuilt/LatinIMEGooglePrebuilt.apk
 has product/app/Photos/Photos.apk
 nohas product/overlay/R0qSkipSetupOverlay.apk

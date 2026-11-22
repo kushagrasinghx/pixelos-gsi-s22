@@ -133,6 +133,9 @@ add $K/pixelos-scripts/r0q-battery.rc $S/etc/init/r0q-battery.rc 644
 # Also: Samsung's usb_notify blocked USB host mode entirely until One UI reports the lock state; r0q-audio.rc writes
 # usb_sl = SUNNY_WORK_MODE (unlock) at boot (+ sepolicy rule for sysfs_usb below).
 # Verified live 2026-11-11: normal apps play through a USB DAC (FiiO JA11); speaker/BT modules unchanged.
+# The same file adds a voip-tx input port (call mic, 2026-11-22). AOSP sends the HAL (requested & profile) input flags,
+# One UI the requested ones, so without the port VOIP_TX was lost and calls used rec-main-mic (one mic, very quiet).
+# Verified live on a cellular call: voip-comm-handset-mic, about 25 dB louder at the HAL.
 add $K/pixelos-scripts/audio/audio_policy_configuration.xml $S/etc/r0q/audio_policy_configuration.xml 644
 # Same label as the vendor original (and the live test), so vendor audio processes may read it through the bind mount.
 setfattr -n security.selinux -v u:object_r:vendor_configs_file:s0 $S/etc/r0q/audio_policy_configuration.xml
@@ -188,7 +191,16 @@ bash $K/pixelos-scripts/trebleapp-patch/build_trebleapp.sh $TA $W/TrebleApp-patc
 cat $W/TrebleApp-patched.apk > $TA   # keep the original inode: owner, mode, SELinux label
 rm -f $W/TrebleApp-patched.apk $W/TrebleApp-patched.apk.idsig
 rm -rf $S/priv-app/TrebleApp/oat
-log "TrebleApp: System updates -> PixelOS updates"
+log "TrebleApp: System updates -> PixelOS updates; call hook no longer sends g_call_sim_slot"
+
+# Telecom: 2G/3G call audio on either SIM (telecom-patch/build_telecom.sh). Samsung's HAL opens the modem voice session
+# of the slot in g_call_sim_slot and only accepts it before MODE_IN_CALL; phh's hook sent the data SIM's slot, too late.
+TC=$S/priv-app/Telecom/Telecom.apk
+bash $K/pixelos-scripts/telecom-patch/build_telecom.sh $TC $W/Telecom-patched.apk
+cat $W/Telecom-patched.apk > $TC   # keep the original inode: owner, mode, SELinux label
+rm -f $W/Telecom-patched.apk $W/Telecom-patched.apk.idsig
+rm -rf $S/priv-app/Telecom/oat
+log "Telecom: call's SIM slot sent before MODE_IN_CALL"
 
 # Signal bars: Samsung's RIL keeps standard signal strength empty until the framework sends FW_READY over
 # ISehRadio. Doze's telephony-common has that code but the Samsung HIDL Java classes it needs are missing from the
@@ -311,6 +323,10 @@ done
 VERSION=${VERSION:?set VERSION, e.g. VERSION=v1.2}
 BUILD_UTC=${BUILD_UTC:-$(date +%s)}
 BUILD_DATE=$(LC_ALL=C date -u -d @$BUILD_UTC '+%a %b %e %H:%M:%S UTC %Y')
+# The build's incremental is set to BUILD_UTC too. PackageManager decides "the system was updated" from a digest of the
+# partition fingerprints (the same Samsung one in every release) + ro.build.version.incremental (Doze-off's 1782680941
+# up to v1.4). With neither changing, and fixed APK mtimes in the EROFS image, updated phones kept the cached manifests
+# of changed system apps (seen: R0qWifiOverlay without its targetName on v1.4), so new activities would never show.
 # Rewrite in place (sed -i would replace the inode and drop the SELinux label).
 python3 - "$BUILD_UTC" "$BUILD_DATE" $S/build.prop $S/product/etc/build.prop $S/system_ext/etc/build.prop <<'EOF'
 import re, sys
@@ -323,6 +339,7 @@ for p in sys.argv[3:]:
     s = f.read()
     t = re.sub(r"(?m)^(ro\.(?:[a-z_]+\.)?build\.date\.utc)=.*$", r"\g<1>=" + utc, s)
     t = re.sub(r"(?m)^(ro\.(?:[a-z_]+\.)?build\.date)=.*$", r"\g<1>=" + date, t)
+    t = re.sub(r"(?m)^(ro\.(?:[a-z_]+\.)?build\.version\.incremental)=.*$", r"\g<1>=" + utc, t)
     f.seek(0); f.write(t); f.truncate(); f.close()
 EOF
 cat >> $S/build.prop <<EOF

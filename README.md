@@ -26,6 +26,9 @@ There is no full AOSP source build, so a build takes a few minutes, not hours.
 | Battery | One UI 8 battery protection (Basic / Maximum 80–95%) in Settings > Battery. | `battery/`, `r0q-battery.rc` |
 | Dolby Atmos | Samsung's own DAX3 engine and S22 tuning attached to the output mix, with a QS tile and Settings > Sound entry. Off by default. | `battery/` (DolbyController) |
 | Flashlight | 5 brightness levels like One UI (long-press the tile); turns on at One UI's default level instead of the weakest. | `systemui-patch/Torch.smali`, `battery/` (TorchLevel) |
+| Google backup restore | Settings > System > Restore Google backup opens Google's cloud restore directly (Google's setup hands restore to Smart Switch on Samsung phones, so it skips it here). | `battery/` (RestoreActivity) |
+| 2G/3G call audio | Telecom tells Samsung's audio HAL which SIM the call is on before audio starts, so calls on the non-data SIM aren't silent. | `telecom-patch/` |
+| Call mic | A VoIP input in the audio policy, so phone (PhhIms) and app calls use Samsung's multi-mic call profile instead of the quiet single-mic recording one. | `audio/` |
 | USB audio | Samsung's usb_notify host lock released, and USB DACs routed through Samsung's primary HAL (DSP), like stock. | `audio/`, `r0q-audio.rc` |
 | Fingerprint | Under-display sensor: no HAL restarts at boot (they lost the enrolled user), touchscreen FOD mode on, correct icon size. | `make_pixelos_r0q.sh`, `systemui_values.xml`, `r0q-perf.rc` |
 | Wi-Fi | 5 GHz hotspot on channel 149, the only 5 GHz channel Samsung's hostapd accepts. | `wifi_values.xml` |
@@ -111,8 +114,9 @@ trebleapp-patch/           TrebleApp patch: its System updates entry opens Pixel
 settings_values.xml        R0qSettingsOverlay (hides Settings > System > System updates)
 systemui-patch/            SystemUI smali patches: charging text, status bar, flashlight levels, location dot
 battery/                   R0qBattery: battery protection, Dolby Atmos, flashlight levels, 120 Hz, brightness fixes
+telecom-patch/             Telecom smali patch: the call's SIM slot for 2G/3G call audio
 radiohelper/               R0qRadioHelper: FW_READY for Samsung's RIL (signal bars)
-audio/                     vendor audio policy + USB devices on Samsung's primary HAL
+audio/                     vendor audio policy + VoIP mic input + USB devices on Samsung's primary HAL
 r0q-*.rc                   init scripts: battery protection, USB audio, performance / fingerprint
 r0q_gsi/                   IMS layer sources (overlays, PhhIms permissions) and the earlier Infinity X source-build layer
 dolby/test/, torch/test/   small app_process probes used to find Dolby parameters and torch levels

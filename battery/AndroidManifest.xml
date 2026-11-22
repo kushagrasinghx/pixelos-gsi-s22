@@ -6,7 +6,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="me.kushagra.r0q.battery"
     android:sharedUserId="android.uid.system"
-    android:versionCode="2" android:versionName="1.2">
+    android:versionCode="3" android:versionName="1.5">
     <!-- In-ROM updater (ota/): GitHub check, notification, download into /data/ota_package, RecoverySystem install. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -80,6 +80,22 @@
             <meta-data android:name="com.android.settings.category" android:value="com.android.settings.category.ia.system" />
             <meta-data android:name="com.android.settings.summary" android:value="Check for and install new PixelOS r0q builds" />
             <meta-data android:name="com.android.settings.icon" android:resource="@drawable/ic_update" />
+            <meta-data android:name="com.android.settings.icon_tintable" android:value="true" />
+        </activity>
+        <!-- Restore Google backup: Settings > System entry. Google's setup hands restore to Smart Switch on Samsung
+             phones, so this opens Google's cloud restore screen directly (restore/RestoreActivity). -->
+        <activity android:name=".restore.RestoreActivity"
+            android:exported="true"
+            android:label="Restore Google backup"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:excludeFromRecents="true"
+            android:taskAffinity="">
+            <intent-filter>
+                <action android:name="com.android.settings.action.IA_SETTINGS" />
+            </intent-filter>
+            <meta-data android:name="com.android.settings.category" android:value="com.android.settings.category.ia.system" />
+            <meta-data android:name="com.android.settings.summary" android:value="Apps and data from a backup in your Google account" />
+            <meta-data android:name="com.android.settings.icon" android:resource="@drawable/ic_restore" />
             <meta-data android:name="com.android.settings.icon_tintable" android:value="true" />
         </activity>
         <service android:name=".ota.OtaJobService"

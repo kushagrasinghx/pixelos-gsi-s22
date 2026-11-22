@@ -24,6 +24,11 @@
                 <mixPort name="primary-in" role="sink">
                     <profile channelMasks="AUDIO_CHANNEL_IN_MONO AUDIO_CHANNEL_IN_STEREO AUDIO_CHANNEL_IN_FRONT_BACK" format="AUDIO_FORMAT_PCM_16_BIT" name="" samplingRates="8000 11025 12000 16000 22050 24000 32000 44100 48000" />
                 </mixPort>
+                <!-- r0q: AOSP passes a requested input flag to the HAL only if a profile declares it. Without this port
+                     calls lose VOIP_TX and Samsung's HAL records them with rec-main-mic instead of voip-comm-*-mic. -->
+                <mixPort flags="AUDIO_INPUT_FLAG_VOIP_TX" name="voip-tx" role="sink">
+                    <profile channelMasks="AUDIO_CHANNEL_IN_MONO" format="AUDIO_FORMAT_PCM_16_BIT" name="" samplingRates="8000 16000 32000 48000" />
+                </mixPort>
                 <mixPort flags="AUDIO_OUTPUT_FLAG_DIRECT AUDIO_OUTPUT_FLAG_MMAP_NOIRQ" name="mmap_no_irq_out" role="source">
                     <profile channelMasks="AUDIO_CHANNEL_OUT_STEREO" format="AUDIO_FORMAT_PCM_16_BIT" name="" samplingRates="48000" />
                 </mixPort>
@@ -85,6 +90,7 @@
                 <route sink="USB Device Out" sources="primary-out,fast" type="mix" />
                 <route sink="USB Headset Out" sources="primary-out,fast" type="mix" />
                 <route sink="primary-in" sources="Built-In Mic,Built-In Back Mic,Wired Headset Mic,Bt Sco Headset Mic,Aux Device In,Voice Call Mic,FM Mic,USB Device In,USB Headset In" type="mix" />
+                <route sink="voip-tx" sources="Built-In Mic,Built-In Back Mic,Wired Headset Mic,Bt Sco Headset Mic,USB Device In,USB Headset In" type="mix" />
             </routes>
         </module>
         <module halVersion="2.0" name="a2dpsink">

@@ -5,6 +5,8 @@
 # Hook: right after super.onCreate() in UpdaterActivity.onCreate: startActivity(me.kushagra.r0q.battery/
 # .ota.UpdaterActivity); finish(); return. Re-signs with the AOSP platform test key (the key the repack script gives
 # all of Doze-off's platform APKs, TrebleApp included).
+# Also: phh's Samsung call hook no longer sends g_call_sim_slot. It sent the *data* SIM's slot, after the voice stream
+# had started (silent 2G/3G calls on the other SIM); telecom-patch/ sends the call's own slot in time instead.
 set -euo pipefail
 IN=$(readlink -f "$1"); OUT=$(readlink -m "$2")
 K=/mnt/d/S22/ProjectInfinityX/keep; H=$K/host-tools
@@ -36,6 +38,19 @@ hook = ("    # r0q: open the PixelOS updates screen instead of phh's updater\n"
         "    return-void\n")
 s = s[:m2.end()] + hook + s[m2.end():]
 open(p, "w").write(s); print("UpdaterActivity -> r0q updater")
+PY
+python3 - 'out/me/phh/treble/app/Samsung$telephonyCallback$1.smali' <<'PY'
+import re, sys
+p = sys.argv[1]; s = open(p).read()
+i0 = s.index(".method public onCallStateChanged(I)V"); i1 = s.index(".end method", i0); body = s[i0:i1]
+key = 'const-string v3, "g_call_sim_slot="'
+assert body.count(key) == 1, "g_call_sim_slot string: %d" % body.count(key)
+at = body.index(key)
+m = re.compile(r"^[ \t]*invoke-static \{v2\}, Landroid/media/AudioSystem;->setParameters\(Ljava/lang/String;\)I\n", re.M).search(body, at)
+assert m and "g_call_state" not in body[at:m.start()], "slot setParameters not found"
+body = body[:at] + 'const-string v3, "slot left to Telecom: "' + body[at + len(key):m.start()] + body[m.end():]
+assert body.count("->setParameters(") == 2, "the g_call_state calls must stay"
+open(p, "w").write(s[:i0] + body + s[i1:]); print("Samsung hook: no g_call_sim_slot")
 PY
 smali a out -o "$DEX.new" --api 27
 mv "$DEX.new" "$DEX"
